@@ -1,0 +1,37 @@
+{%extends 'base.html'%}
+{% block title %}
+Home
+{% endblock %}
+{% block css %}
+    <link rel="stylesheet" type="text/css" href="./static/css/home.css">
+{%endblock%}
+{%block main%}
+    <div class="body-container">
+        <div class="inforbox">
+            <img class="wallpaper_small" src="{{url_for('static',filename='img/HD-Wallpapers1_FOSmVKg.jpeg')}}">
+        </div>
+         <div class="inforbox">
+            <table class="info_table">
+                <tbody>
+                    <tr class="top_table">
+                        <td>
+                            <img class="logo_image" src="{{url_for('static',filename='img/camera-icon.png')}}">
+                            <p class="logo small_logo">Photogram</p>
+                        </td>
+                    </tr>
+                    <tr class="table_row">
+                        <td>
+                            <p>Share photos of your favourite moments with friends, family and the world.</p>
+                        </td>
+                    </tr>
+                    <tr class="table_row">
+                        <td>
+                            <a href="{{url_for('register')}}"><button class="submit_btn color_green">Register</button></a>
+                            <a href="{{url_for('login')}}"><button class="submit_btn color_blue">Login</button></a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+{%endblock%}

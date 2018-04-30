@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>{%block title%}{% endblock %}</title>
+        <meta charset="utf-8">
+        <link type="text/css" rel="stylesheet" href="./static/css/base.css">
+        {% block css %}{%endblock%}
+    </head>
+    <body>
+        {% include 'header.html' %}
+        {% block main %}{% endblock %}
+    </body>
+   <script src="./static/js/vue.js" charset="utf-8"></script>
+   <script src="./static/js/app.js" charset="utf-8"></script>
+</html>

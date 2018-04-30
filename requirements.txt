@@ -1,0 +1,9 @@
+Flask
+Flask-SQLAlchemy
+Flask-JWT
+Flask-WTF
+Jinja2
+Werkzeug
+click
+MarkupSafe
+
