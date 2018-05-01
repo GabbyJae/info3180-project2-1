@@ -6,4 +6,8 @@ Jinja2
 Werkzeug
 click
 MarkupSafe
+Flask-Migrate
+psycopg2
+WTForms
+gunicorn
 

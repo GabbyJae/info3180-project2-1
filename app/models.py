@@ -5,17 +5,17 @@ import datetime
 class Users(db.Model):
     __tablename__ = 'Users'
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(25), nullable=False)
-    password = db.Column(db.String(500), nullable=False)
-    firstname = db.Column(db.String(25), nullable=False)
-    lastname = db.Column(db.String(25), nullable=False)
-    email = db.Column(db.String(30), nullable=False)
-    location = db.Column(db.String(25))
+    username = db.Column(db.String(25))
+    password = db.Column(db.String(500))
+    firstname = db.Column(db.String(25))
+    lastname = db.Column(db.String(25))
+    email = db.Column(db.String(30))
+    location = db.Column(db.String(50))
     biography = db.Column(db.String(500))
     profile_photo = db.Column(db.String(100))
     joined_on = db.Column(db.Date)
     
-    def __init__(self,username,password,firstname,lastname,email,location,biography,photo);
+    def __init__(self,username,password,firstname,lastname,email,location,biography,photo):
         self.username = username
         self.password = password
         self.firstname = firstname

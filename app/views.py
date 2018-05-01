@@ -1,5 +1,5 @@
 from app import app
-from flask import request, redirect, url_for, render_template,jsonify,make_response
+from flask import request, redirect, url_for, render_template,jsonify,make_response,g
 from models import Users,Posts,Follows,Likes
 from app import db
 from werkzeug.security import generate_password_hash,check_password_hash
@@ -14,21 +14,27 @@ import jwt
 def token_required(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        token = None
         
-        auth = request.headers.get('x-token-access',None)
+        auth = request.headers.get('Authorization',None)
         
-        if auth is not None:
-            token = request.headers['x-token-access']
-        else:
-            return jsonify({'message':'Token is missing'})
+        if auth is None:
+           return jsonify({'message':'Token is missing'})
+        
+        if auth.split()[0].lower() != "x-token":
+            return jsonify({'message':'Not a Token'})
             
+        token  = auth.split()[1]
+        print(token)
         try:
             data = jwt.decode(token,app.config['SECRET_KEY'])
-            current_user = User.query.filter_by(user_id=data['user_id']).first()
-        except:
+            
+        except jwt.DecodeError:
+            return jsonify({'message':'Token is invalid'})
+        except jwt.ExpiredSignature:
             return jsonify({'message':'Token is invalid'})
        
+        g.current_user = data
+        print(data)
         return func(*args, **kwargs)
     return wrapper
         
@@ -45,6 +51,14 @@ def register():
 def login():
     form = LoginIn()
     return render_template("login.html",form=form)
+    
+@app.route('/logout')
+def logout():
+    return render_template("logout.html")
+
+@app.route('/myprofile')
+def myprofile():
+    return render_template("profile.html")
     
 @app.route('/posts/new')
 def post():
@@ -63,7 +77,7 @@ def profile():
     
 @app.route('/posts/explore')
 def explore():
-    return render_template("posts.html",form=form)
+    return render_template("posts.html")
     
 @app.route('/api/auth/login', methods=['POST'])
 def api_auth_logout():
@@ -86,14 +100,13 @@ def api_auth_login():
         make_response("Could not verify", 401 , {'WWW-Authenticate': 'Basic realm="Login required"'})
     
     if check_password_hash(user.password,password):
-        token = jwt.encode({'user_id':user.id, 'exp':datetime.datetime.utcnow()+datetime.timedelta(minutes=45)},app.config['SECRET_KEY'])
+        token = jwt.encode({'user':user, 'exp':datetime.datetime.utcnow()+datetime.timedelta(minutes=45)},app.config['SECRET_KEY'])
         
         return jsonify({'token':token.decode('UTF-8')})
     return make_response("Could not verify", 401 , {'WWW-Authenticate': 'Basic realm="Login required"'})
     
 @app.route('/api/user/register', methods=['POST'])
-@token_required
-def api_user_register(current_user):
+def api_user_register():
         data  = request.get_json()
         
         firstname = data['firstname']
@@ -109,7 +122,7 @@ def api_user_register(current_user):
             if Users.query.filter_by(username=username).first() :
                 return jsonify({'result':'Username taken'})
         except:
-             print('ok')
+             print('Ok')
          
         if firstname is None or lastname is None  or username is None or email is None:
             return jsonify({'message':'Required Field is missing'})
@@ -117,16 +130,16 @@ def api_user_register(current_user):
         password = generate_password_hash(passwordraw, method='sha256')
         
         user = Users(firstname=firstname,lastname=lastname,email=email,username=username,location=location,
-                    password=str(password),biography=bio,photo=photo)
+                    password=password,biography=bio,photo=photo)
                     
         db.session.add(user)
-        #db.session.commit()
+        db.session.commit()
         
         return jsonify({'message':'Sucessfully Registered'})
 
 @app.route('/api/post', methods=['GET'])
 @token_required
-def api_post(current_user):
+def api_post():
    
     posts = Posts.query.all()
     
@@ -144,8 +157,8 @@ def api_post(current_user):
 
 @app.route('/api/users/<user_id>/posts', methods=['GET','POST'])
 @token_required
-def api_users_post(current_user,user_id):
-
+def api_users_post(user_id):
+    
     if(request.method == "GET"):
         posts = Posts.query.filter_by(user_id=user_id).all()
         
@@ -177,7 +190,9 @@ def api_users_post(current_user,user_id):
         
 @app.route('/api/users/<user_id>/follow', methods=['POST'])
 @token_required
-def api_users_follow(current_user,user_id):      
+def api_users_follow(user_id): 
+        user_id = g.current_user['id']
+    
         data = request.get_json()
         follower_id = data['follower_id']
         
@@ -190,13 +205,13 @@ def api_users_follow(current_user,user_id):
 
 @app.route('/api/users/<post_id>/like', methods=['POST'])
 @token_required
-def api_posts_like(current_user,post_id):      
+def api_posts_like(post_id):      
         like = Likes(user_id=current_user.id,post_id=post_id)
         
         db.session.add(like)
         db.session.commit()
         
-        return jsonify({'message':'Likes'})
+        return jsonify({'message':'Liked'})
     
     
 if __name__ == '__main__':
