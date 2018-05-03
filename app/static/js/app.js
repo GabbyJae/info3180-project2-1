@@ -3,7 +3,7 @@ Vue.component('header-app',{
         <header>
             <ul class="nav_bar">
             <li class="nav_item logo"><router-link class="router_link logo" to="/"><img class="logo_image" src="./static/img/camera-icon.png">Photogram</router-link></li>
-            <li class="nav_item"><router-link class="router_link" to="/logout">Logout</router-link></li>
+            <li class="nav_item"><router-link class="router_link" to="/logout/">Logout</router-link></li>
             <li class="nav_item"><router-link  class="router_link" to="/profile">My Profile</router-link></li>   
             <li class="nav_item"><router-link  class="router_link" to="/explore">Explore</router-link></li>   
             <li class="nav_item"><router-link class="router_link" to="/">Home</router-link></li>
@@ -113,7 +113,7 @@ const Register = Vue.component('register',{
               <tr>
                   <button type="submit" class="color_green submit_btn2">Register</button>
               </tr>
-             
+            </table> 
     </form>`,
     data: function() {
         return {
@@ -162,7 +162,7 @@ const Register = Vue.component('register',{
 
 const Login = Vue.component('login',{
     template: ` 
-        <
+        
     `,
     data: function() {
         return {
@@ -207,7 +207,7 @@ const Login = Vue.component('login',{
 
 const Logout = Vue.component('logout',{
     template: ` 
-        <
+        
     `,
     data: function() {
         return {
@@ -215,8 +215,7 @@ const Logout = Vue.component('logout',{
             error:[]
         }
     },
-    methods:{
-        logout:function(){
+    created:function(){
             let self=this;
             fetch("/api/auth/logout",{
                 method:'POST',
@@ -237,7 +236,6 @@ const Logout = Vue.component('logout',{
                 self.error = error;
             });
         }
-    }
 });
 
 Vue.use(VueRouter);
@@ -255,7 +253,12 @@ const router = new VueRouter({
        {
            path:'/login/',
            component:Login
+       },
+        {
+           path:'/logout/',
+           component:Logout
        }
+       
        ]
 });
 

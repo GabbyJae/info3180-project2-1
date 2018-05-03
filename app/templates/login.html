@@ -1,0 +1,30 @@
+{%extends 'base.html'%}
+{% block title %}
+Photogram
+{% endblock %}
+{% block css %}
+    <link rel="stylesheet" type="text/css" href="./static/css/home.css">
+    <link rel="stylesheet" type="text/css" href="./static/css/signup.css">
+{%endblock%}
+{%block main%}
+    <div id="project2">
+        <header-app></header-app>
+        <h2 class="title">Login</h2>
+        <form id=loginform >
+             <table class="logininformation">
+              <tr>
+                  <h4><label for="username">Username</label></h4>
+                  <input id="username" name="username" type="text" value="">
+              </tr>
+              <tr>
+                  <h4><label for="password">Password</label></h4>
+                  <input id="password" name="password" type="password" value="">
+              </tr>
+              <tr>
+                  <br>
+                  <button type="submit" class="color_green submit_btn2">Login</button>
+              </tr>
+             </table>
+        </form>
+    </div>
+{%endblock%}

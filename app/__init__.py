@@ -12,4 +12,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 
 db = SQLAlchemy(app)
 
+
+
+#Trying heroku
 from app import views 

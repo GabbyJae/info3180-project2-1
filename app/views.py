@@ -41,7 +41,7 @@ def token_required(func):
         
 @app.route('/')
 def home():
-    return render_template("home.html")
+    return render_template("login.html")
     
 @app.route('/register')
 def register():
