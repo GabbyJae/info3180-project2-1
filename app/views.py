@@ -1,13 +1,14 @@
 from app import app
-from flask import request, redirect, url_for, render_template,jsonify,make_response,g
+from flask import request, redirect, url_for, render_template,jsonify,session,make_response,g
 from models import Users,Posts,Follows,Likes
 from app import db
 from werkzeug.security import generate_password_hash,check_password_hash
-
+from werkzeug.utils import secure_filename
 
 from forms import SignUp,LoginIn,MakePost
 from functools import wraps
 import datetime
+import os
 
 import jwt
 
@@ -79,34 +80,43 @@ def profile():
 def explore():
     return render_template("posts.html")
     
-@app.route('/api/auth/login', methods=['POST'])
+@app.route('/api/auth/logout', methods=['POST'])
+@token_required
 def api_auth_logout():
     token = jwt.encode({},app.config['SECRET_KEY'])
-    return jsonify({'token':token.decode('UTF-8')})
+    return jsonify({'token':token})
     
 @app.route('/api/auth/login', methods=['POST'])
 def api_auth_login():
     auth = request.authorization
     
-    if not auth or not auth.password or not auth.username:
-        return make_response("Could not verify", 401 , {'WWW-Authenticate': 'Basic realm="Login required"'})
-    
-    username = auth.username
-    password = auth.password
+    if not request.form['username']:
+        return jsonify({'message':'No Username'}) 
+    if  not request.form['password']:
+         return jsonify({'message':'No Password'}) 
+         
+    username = request.form['username']
+    password = request.form['password']
     
     user = user.query.filter_by(username=username).first()
     
     if not user:
-        make_response("Could not verify", 401 , {'WWW-Authenticate': 'Basic realm="Login required"'})
+       return jsonify({'message':'Invalid Username'}) 
     
     if check_password_hash(user.password,password):
         token = jwt.encode({'user':user, 'exp':datetime.datetime.utcnow()+datetime.timedelta(minutes=45)},app.config['SECRET_KEY'])
+    else:
+        return jsonify({'message':'Invalid Password'}) 
+    
+    session["logged_in"] = True
+    session["user_id"] = user.id
         
-        return jsonify({'token':token.decode('UTF-8')})
-    return make_response("Could not verify", 401 , {'WWW-Authenticate': 'Basic realm="Login required"'})
+    return jsonify({'user_id':user.id,'token':token,'message':'sucess'})
+   
     
 @app.route('/api/user/register', methods=['POST'])
 def api_user_register():
+    
         firstname = request.form['firstname']
         lastname = request.form['lastname']
         username = request.form['username']
@@ -114,21 +124,27 @@ def api_user_register():
         email = request.form['email']
         location = request.form['location']
         bio = request.form['biography']
-        photo = request.form['photo']
+        photo = request.files['photo']
         
+        
+        if firstname == "" or lastname == ""  or username == "" or email == "" or photo.filename == "":
+            return jsonify({'message':'Required Field is missing'})
+            
         try:
             if Users.query.filter_by(username=username).first() :
                 return jsonify({'message':'Username taken'})
         except:
              print('Ok')
-         
-        if firstname is "" or lastname is ""  or username is "" or email is "":
-            return jsonify({'message':'Required Field is missing'})
+             
+        filename = secure_filename(photo.filename)
+        photo.save(os.path.join("./app/static/img",filename))
+        
+        return jsonify({'message':'Sucessfully Registered'})
         
         password = generate_password_hash(passwordraw, method='sha256')
         
         user = Users(firstname=firstname,lastname=lastname,email=email,username=username,location=location,
-                    password=password,biography=bio,photo=photo)
+                    password=password,biography=bio,photo=filename)
                     
         db.session.add(user)
         db.session.commit()

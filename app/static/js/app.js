@@ -58,7 +58,7 @@ const Home = Vue.component('home',{
                     <tr class="table_row">
                         <td>
                             <router-link class="router_link" to="/register"><button class="submit_btn color_green">Register</button></router-link>
-                            <router-link class="router_link" to="/login"><button class="submit_btn color_blue">Login</button></router-link>
+                            <router-link class="router_link" to="/login/"><button class="submit_btn color_blue">Login</button></router-link>
                         </td>
                     </tr>
                 </tbody>
@@ -96,7 +96,7 @@ const Register = Vue.component('register',{
               </tr>
               <tr>
                   <h4><label for="location">Location</label></h4>
-                  <input id="location" name="location" type="text" value="Location">
+                  <input id="location" name="location" type="text" value="">
               </tr>
               <tr>
                   <h4><label for="bio">Biograpghy</label></h4>
@@ -107,9 +107,13 @@ const Register = Vue.component('register',{
                       <input id="photo" name="photo" type="file">
                       <br>
               </tr>
+               <tr v-for="mess in error" class="error1">
+                  <h4>{{mess}}</h4>
+              </tr>
               <tr>
                   <button type="submit" class="color_green submit_btn2">Register</button>
               </tr>
+             
     </form>`,
     data: function() {
         return {
@@ -140,11 +144,96 @@ const Register = Vue.component('register',{
             }).then(function(response){
                 return response.json();
             }).then(function (jsonResponse){
-                alert(jsonResponse.message);
-                self.reponse = jsonResponse.response;
-                self.$router.push('/explore')
+                if(jsonResponse.message == "Username taken" || jsonResponse.message=="Required Field is missing"){
+                    self.error = [jsonResponse.message];
+                    self.$router.push('/register')
+                }else{
+                    alert(jsonMessaage)
+                    self.reponse = jsonResponse.response;
+                    self.$router.push('/explore')
+                }
             }).catch(function(error){
-               alert(error);
+                alert(error);
+                self.error = error;
+            });
+        }
+    }
+});
+
+const Login = Vue.component('login',{
+    template: ` 
+        <
+    `,
+    data: function() {
+        return {
+            reponse:[],
+            error:[]
+        }
+    },
+    methods:{
+        login:function(){
+            let self=this;
+                    let form = document.getElementById("loginform");
+                    let formData = new FormData(form);
+            fetch("/api/auth/login",{
+                method:'POST',
+                body:formData,
+                header:{
+                    "Content-Type": "application/json",
+                }
+            }).then(function(response){
+                return response.json();
+            }).then(function (response){
+                if(response.message == "sucess" ){
+                    let token = response.token;
+                    let user_id = response.user_id
+                    
+                    localStorage.setItem('token', token);
+                    localStorage.setItem('user_id', user_id)
+                    
+                    self.$router.push('/explore')
+                }else{
+                    self.error = [response.message];
+                    self.reponse = response.response;
+                    self.$router.push('/login/')
+                }
+            }).catch(function(error){
+                alert(error);
+                self.error = error;
+            });
+        }
+    }
+});
+
+const Logout = Vue.component('logout',{
+    template: ` 
+        <
+    `,
+    data: function() {
+        return {
+            reponse:[],
+            error:[]
+        }
+    },
+    methods:{
+        logout:function(){
+            let self=this;
+            fetch("/api/auth/logout",{
+                method:'POST',
+                header:{
+                    "Content-Type": "application/json",
+                    'Authorization': 'X-Token ' + localStorage.getItem('token')
+                }
+            }).then(function(response){
+                return response.json();
+            }).then(function (response){
+                    let token = response.token;
+                    
+                    localStorage.setItem('token', token);
+                    localStorage.setItem('user_id', null);
+                    self.$router.push('/');
+            }).catch(function(error){
+                alert(error);
                 self.error = error;
             });
         }
@@ -162,6 +251,10 @@ const router = new VueRouter({
        {
            path:'/register',
            component:Register
+       },
+       {
+           path:'/login/',
+           component:Login
        }
        ]
 });
