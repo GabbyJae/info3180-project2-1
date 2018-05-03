@@ -107,24 +107,22 @@ def api_auth_login():
     
 @app.route('/api/user/register', methods=['POST'])
 def api_user_register():
-        data  = request.get_json()
-        
-        firstname = data['firstname']
-        lastname = data['lastname']
-        username = data['username']
-        passwordraw = data['password']
-        email = data['email']
-        location = data['location']
-        bio = data['bio']
-        photo = data['photo']
+        firstname = request.form['firstname']
+        lastname = request.form['lastname']
+        username = request.form['username']
+        passwordraw = request.form['password']
+        email = request.form['email']
+        location = request.form['location']
+        bio = request.form['biography']
+        photo = request.form['photo']
         
         try:
             if Users.query.filter_by(username=username).first() :
-                return jsonify({'result':'Username taken'})
+                return jsonify({'message':'Username taken'})
         except:
              print('Ok')
          
-        if firstname is None or lastname is None  or username is None or email is None:
+        if firstname is "" or lastname is ""  or username is "" or email is "":
             return jsonify({'message':'Required Field is missing'})
         
         password = generate_password_hash(passwordraw, method='sha256')

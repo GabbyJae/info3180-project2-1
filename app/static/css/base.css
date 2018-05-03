@@ -35,19 +35,13 @@ header{
     margin-top:0 !important;
     margin-left:30px;
 }
-.logo a{
+.logo{
     color:black! important;
     font-family:"Brush Script MT";
     font-weight:900;
     font-size:40px;
 }
-.nav_item a{
+.nav_item, .router_link{
     text-decoration:none;
     color:white;
-}
-.color_green{
-    background:#54A91A;
-}
-.color_blue{
-    background:#568CC2;
 }

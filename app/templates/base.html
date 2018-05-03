@@ -4,14 +4,16 @@
         <title>{%block title%}{% endblock %}</title>
         <meta charset="utf-8">
         <link type="text/css" rel="stylesheet" href="./static/css/base.css">
+        <link type="text/css" rel="stylesheet" href="./static/css/home.css">
+        <link type="text/css" rel="stylesheet" href="./static/css/signup.css">
         {% block css %}{%endblock%}
     </head>
     <body>
-        {% include 'header.html' %}
         {% block main %}{% endblock %} 
         <script src="https://unpkg.com/vue"></script>
         <script src="https://unpkg.com/vue-router"></script>
         
+        <script src="./static/js/vue-router.js" charset="utf-8"></script>
         <script src="./static/js/vue.js" charset="utf-8"></script>
         <script src="./static/js/app.js" charset="utf-8"></script>
     </body>

@@ -1,5 +1,5 @@
 
-.signupform{
+#signupform{
     width:40%;
     margin-top:70px;
     margin-left:30%;
@@ -32,7 +32,7 @@ input{
     border-radius:7px;
     color:gray;
 }
-.submit_btn{
+.submit_btn2{
     margin-top:20px;
     width:100%;
     padding:10px 40px;
@@ -42,4 +42,8 @@ input{
     font-size:20px;
     padding:20px 4px;
     border-radius:5px;
+}
+
+.userinformation{
+    width: 100%;
 }
