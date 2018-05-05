@@ -10,7 +10,7 @@ class SignUp(FlaskForm):
     lastname = StringField('Lastname',[validators.Required("Must have a last name")])
     email = StringField('Email',[validators.Required("Must have an email")])
     location = StringField('Location')
-    biography = TextAreaField('Biograpghy')
+    biography = TextAreaField('Biography')
     photo = FileField("Photo",validators = [FileRequired(),FileAllowed(['jpg','png','jpeg'])])    
     submit = SubmitField("Add Register")
 

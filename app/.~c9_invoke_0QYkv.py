@@ -31,12 +31,14 @@ def token_required(func):
             
         try:
             data = jwt.decode(token,app.config['SECRET_KEY'])
+            
         except jwt.DecodeError:
             return jsonify({'message':'Token is invalid'})
         except jwt.ExpiredSignature:
             return jsonify({'message':'Token is invalid'})
        
         g.current_user = data
+        
         return func(*args, **kwargs)
     return wrapper
         
@@ -90,13 +92,12 @@ def api_user_register():
         email = request.form['email']
         location = request.form['location']
         bio = request.form['biography']
-        
         try:
             photo = request.files['photo']
-            if firstname == "" or lastname == ""  or username == "" or email == "" or photo.filename == "" or bio =="" or location=="" or email=="":
+            if firstname == "" or lastname == ""  or username == "" or email == "" or photo.filename == "":
                 return jsonify({'message':'Required Field is missing'})
         except:
-            return jsonify({'message':'Please submit a profile photo'})
+            jsonify({'message':'Required Field is missing'})
             
         try:
             if Users.query.filter_by(username=username).first() :
@@ -150,26 +151,38 @@ def api_posts():
         postdata['user_id'] = post.user_id
         postdata['photo'] = post.photo
         postdata['caption'] = post.caption
-        postdata['created_on'] = post.created_on[:-15]
-        
-        like = Likes.query.filter_by(user_id=int(g.current_user['user_id']),post_id=post.id).first()
-        if like:
-            postdata['liked'] = True
-        else:
-            postdata['liked'] = False
+        postdata['created_on'] = post.created_on
        
         output +=[postdata]
         
     return jsonify({'posts':output,'message':"All posts"})
     
-
+@app.route('/api/likes', methods=['GET'])
+@token_required
+def api_likes():
+        pri
+    likes = Likes.query.all()
+    
+    if not likes:
+        return jsonify({'message':'No likes'})
+            
+    output = []
+    
+    for like in likes:
+        likedata= {}
+        likedata['id'] = like.id
+        likedata['user_id'] = like.user_id
+        likedata['post_id'] = like.post_id
+        output +=[likedata]
+        
+    return jsonify({'likes':output,'message':"All likes"})
 
 @app.route('/api/users/<user_id>/posts', methods=['GET','POST'])
 @token_required
 def api_users_post(user_id):
     
     if(request.method == "GET"):
-        posts = Posts.query.filter_by(user_id=int(user_id)).all()
+        posts = Posts.query.filter_by(user_id=user_id).all()
         
         if not posts:
             return jsonify({'message':'No post'})
@@ -182,12 +195,9 @@ def api_users_post(user_id):
             postdata['user_id'] = post.user_id
             postdata['photo'] = post.photo
             postdata['caption'] = post.caption
-            postdata['created_on'] = post.created_on[:-15]
-            
-            postdata['liked'] = False
-            
+            postdata['created_on'] = post.created_on
             output +=[postdata]
-        return jsonify({'posts':output,'message':"All posts"})
+        return jsonify({'posts':output,})
     else:
         
         jsonify({'message': request.form['caption']})
@@ -217,58 +227,28 @@ def api_users_post(user_id):
 @app.route('/api/users/<user_id>/follow', methods=['POST'])
 @token_required
 def api_users_follow(user_id): 
-
-        follower_id = g.current_user['user_id']
-
-        follow = Follows(user_id=int(user_id),follower_id=int(follower_id))
+        user_id = g.current_user['id']
+    
+        data = request.get_json()
+        follower_id = data['follower_id']
+        
+        follow = Follows(user_id=user_id,follower_id=follower_id)
         
         db.session.add(follow)
         db.session.commit()
         
-        return jsonify({'message':'sucess'})
-
-@app.route('/api/users/<user_id>', methods=['GET'])
-@token_required
-def api_users_user(user_id): 
-        _user_ = Users.query.filter_by(id=int(user_id)).first()
-        followers = Follows.query.filter_by(user_id=int(user_id)).all()
-        posts = Posts.query.filter_by(user_id=int(user_id)).all()
-        
-        userinfo={}
-        userinfo['no_of_followers'] = len(followers)
-        userinfo['no_of_posts'] = len(posts)
-        
-        for f in followers:
-            if(g.current_user['user_id'] == f.follower_id ):
-                userinfo['no_follow'] = False
-                
-        if userinfo.get('no_follow',None) == None:
-            userinfo['no_follow'] = True
-        user={}
-        user['firstname'] = _user_.firstname
-        user['lastname'] = _user_.lastname
-        user['profile_photo'] = _user_.profile_photo
-        user['location'] = _user_.location
-        user['created_on'] = _user_.joined_on.strftime('%d, %b %Y')
-        user['biography'] = _user_.biography
-        
-        return jsonify({'user':user,'userinfo':userinfo,'message':'sucess'})
-        
+        return jsonify({'message':'Followed'})
 
 @app.route('/api/users/<post_id>/like', methods=['POST'])
 @token_required
 def api_posts_like(post_id):      
-        like = Likes(user_id=g.current_user['user_id'],post_id=post_id)
+        like = Likes(user_id=current_user.id,post_id=post_id)
         
         db.session.add(like)
         db.session.commit()
         
-        return jsonify({'message':'sucess'})
-
-@app.errorhandler(404)
-def page_not_found(error):
-    """Custom 404 page."""
-    return render_template('404.html'), 404  
+        return jsonify({'message':'Liked'})
+    
     
 if __name__ == '__main__':
     app.run(debug=True,host="0.0.0.0",port=8080)

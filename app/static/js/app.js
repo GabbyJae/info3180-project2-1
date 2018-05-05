@@ -4,7 +4,7 @@ Vue.component('header-app',{
             <ul class="nav_bar">
             <li class="nav_item logo"><router-link class="router_link logo" to="/"><img class="logo_image" src="./static/img/camera-icon.png">Photogram</router-link></li>
             <li class="nav_item"><router-link class="router_link" to="/logout/">Logout</router-link></li>
-            <li class="nav_item"><router-link  class="router_link" to="/profile">My Profile</router-link></li>   
+            <li class="nav_item"><router-link  class="router_link" v-bind:to="'/users/'+user_id">My Profile</router-link></li>   
             <li class="nav_item"><router-link  class="router_link" to="/explore">Explore</router-link></li>   
             <li class="nav_item"><router-link class="router_link" to="/">Home</router-link></li>
             </ul>
@@ -23,6 +23,7 @@ Vue.component('header-app',{
     data: function() {
         return {
             user: [],
+            user_id:null
         }
     },
     methods:{
@@ -99,7 +100,7 @@ const Register = Vue.component('register',{
                   <input id="location" name="location" type="text" value="">
               </tr>
               <tr>
-                  <h4><label for="bio">Biograpghy</label></h4>
+                  <h4><label for="bio">Biography</label></h4>
                   <textarea id="bio" name="biography"></textarea>
               </tr>
               <tr>
@@ -144,13 +145,13 @@ const Register = Vue.component('register',{
             }).then(function(response){
                 return response.json();
             }).then(function (jsonResponse){
-                if(jsonResponse.message == "Username taken" || jsonResponse.message=="Required Field is missing"){
+                if(jsonResponse.message == "Username taken" || jsonResponse.message=="Required Field is missing" || jsonResponse.message=="Please submit a profile photo"){
                     self.error = [jsonResponse.message];
                     self.$router.push('/register')
                 }else{
                     alert(jsonResponse.message)
                     self.reponse = jsonResponse.response;
-                    self.$router.push('/explore')
+                    self.$router.push('/home')
                 }
             }).catch(function(error){
                 alert(error);
@@ -289,21 +290,18 @@ const Post = Vue.component('post',{
     methods:{
      post:function(){
             let self=this;
-            let form = document.getElementById("postform");
-            alert(form)
-            let formData = new FormData(form);
+                    let form = document.getElementById("postform");
+                    let formData = new FormData(form);
             let user_id = localStorage.getItem('user_id');
             fetch("/api/users/"+user_id+"/posts",{
                 method:'POST',
-                body:formData,
+                body: formData,
                 headers:{
-                    "Content-Type": "application/json",
                     'Authorization': 'X-Token ' + localStorage.getItem('token')
                 }
             }).then(function(response){
                 return response.json();
             }).then(function (response){
-                alert(response.message)
                 if(response.message == "sucess" ){
                     self.$router.push('/explore')
                 }else{
@@ -319,19 +317,143 @@ const Post = Vue.component('post',{
     }
 });
 
+const Profile = Vue.component('profile',{
+    template:`
+        <div id="profile">
+           <div class="profileinfo">
+                   <img class="big_profile_photo" v-bind:src="'./static/img/'+user.profile_photo" />
+                   <div class="userinfo">
+                          <h3>{{user.firstname}} {{user.lastname}}</h3>
+                          <h5>{{user.location}}<br>Member since {{user.created_on}}</h5>
+                          <h5>{{user.biography}}</h5>
+                   </div>
+                   <div class="followinfo">
+                       <p><em>{{userinfo.no_of_posts}}</em><em>{{userinfo.no_of_followers}}</em><br><b>Post</b><b>Following</b></p>
+                       
+                       <button v-if="nofollow" class="submit_btn color_blue" @click="follow">Follow</button>
+                       <button v-else class="submit_btn color_green">Following</button>
+                   </div>
+           </div>
+           
+           <div v-if="haspost" class="allposts">
+               <div v-for="post in posts" class="image_container">
+                   <img class="profile_images" v-bind:src= "'./static/img/'+post.photo">
+               </div>
+           </div>
+           <div v-else>
+                <h1>No Posts</h1>
+           </div>
+    </div>
+    `,
+    watch:{
+      'trigger' (newval,oldval){
+          this.reload();
+      }  
+    },
+    data: function() {
+        return {
+            reponse:[],
+            error:[],
+            posts:[],
+            user:null,
+            userinfo:null,
+            logined_in:false,
+            nofollow:true,
+            haspost:true,
+            trigger:null
+        }
+    },
+    created:function(){
+            let self=this;
+            let user_id = this.$route.params.user_id;
+            if (user_id == 'null'){
+                self.$router.push('/explore');
+            }
+            fetch("/api/users/"+user_id+"/posts",{
+                method:'GET',
+                headers:{
+                    "Content-Type": "application/json",
+                    'Authorization': 'X-Token ' + localStorage.getItem('token')
+                }
+            }).then(function(response){
+                return response.json();
+            }).then(function (response){
+                if(response.message == "All posts"){
+                    self.logined_in = true;
+                    self.posts = response.posts;
+                    self.haspost = true;
+                    self.trigger = false;
+                }else if(response.message == 'No post'){
+                    self.logined_in = true;
+                    self.haspost = false;
+                    self.trigger = false;
+                }else{
+                    self.logined = false;
+                }
+            }).catch(function(error){
+                alert(error);
+                self.error = error;
+            });
+            fetch("/api/users/"+user_id,{
+                method:'GET',
+                headers:{
+                    "Content-Type": "application/json",
+                    'Authorization': 'X-Token ' + localStorage.getItem('token')
+                }
+            }).then(function(response){
+                return response.json();
+            }).then(function (response){
+                if(response.message == "sucess"){
+                    self.user = response.user;
+                    self.userinfo = response.userinfo;
+                    self.nofollow = response.userinfo.no_follow;
+                }
+            }).catch(function(error){
+                alert(error);
+                self.error = error;
+            });
+        },
+    methods:{
+        follow:function(){
+            let self=this;
+            let user_id = this.$route.params.user_id;
+            fetch("/api/users/"+user_id+"/follow",{
+                method:'POST',
+                headers:{
+                    "Content-Type": "application/json",
+                    'Authorization': 'X-Token ' + localStorage.getItem('token')
+                }
+            }).then(function(response){
+                return response.json();
+            }).then(function (response){
+                alert(response.message)
+                if(response.message == "sucess"){
+                    self.nofollow = false;
+                    self.userinfo.no_of_followers = self.userinfo.no_of_followers + 1
+                    self.$router.push('/users/'+user_id)
+                }
+            }).catch(function(error){
+                alert(error);
+                self.error = error;
+            });
+ 
+        }       
+    }
+});
+
 
 const Explore = Vue.component('explore',{
     template:`
         <div id="explorepost">
-        <div v-if="logined_in" class="sucess2">
-            <center>
-            <h5>Sucessfully Login</h5>
-            </center>
-        </div>
-        <div v-else class="error2">
+        <div v-if="!logined_in" class="error2">
             <center>
             <h5>You must login first</h5>
             <router-link class="router_link" to="/login/"><button class="submit_btn color_blue">Login</button></router-link>
+            </center>
+        </div>
+        <div v-else class="sucess2">
+            <center>
+            <h5>Logged in </h5>
             </center>
         </div>
         <div class="rightinfo">
@@ -347,7 +469,7 @@ const Explore = Vue.component('explore',{
                             </tr>
                             <tr>
                                 <td>
-                                      <img class="post_image" v-bind:src= "'/static/uploads/'+post.photo_name"/>
+                                      <img class="post_image" v-bind:src= "'./static/img/'+post.photo"/>
                                         
                                 </td>
                             </tr>
@@ -358,9 +480,10 @@ const Explore = Vue.component('explore',{
                             </tr>
                             <tr>
                                 <td>
-                                <span class="like">
-                                    <img class="like_image" src='./static/img/like.png'/>
-                                    <h5>{{post.no_of_likes}} Likes</h5>
+                                <span class="like" >
+                                    <img  v-if="post.liked" class="like_image" src='./static/img/liked.png'/>
+                                    <img @click="like(post.id)" v-else class="like_image" src='./static/img/like.png'/>
+                                    <h5>{{post.no_of_likes}} Like</h5>
                                 </span>
                                 <span class="date">
                                     <h5>{{post.created_on}}</h5>
@@ -374,7 +497,7 @@ const Explore = Vue.component('explore',{
         </div>
         
         <div v-if="logined_in" class="leftinfo">
-            <router-link  class="router_link" to="/post"><button class="submit_btn2 color_blue" >New Post</button></router-link>
+            <router-link  class="router_link" to="/post/new"><button class="submit_btn2 color_blue" >New Post</button></router-link>
         </div>
     </div>
     `,
@@ -403,7 +526,7 @@ const Explore = Vue.component('explore',{
             }).then(function(response){
                 return response.json();
             }).then(function (response){
-                if(response.message == "All post"){
+                if(response.message == "All posts"){
                     self.logined_in = true;
                     self.posts = response.posts;
                     self.trigger = false;
@@ -411,16 +534,55 @@ const Explore = Vue.component('explore',{
                     self.logined_in = true;
                     self.trigger = false;
                 }else{
-                    self.no_login = false;
-                    self.trigger = true;
+                    self.logined_in = false;
                 }
             }).catch(function(error){
                 alert(error);
                 self.error = error;
             });
         },
-    methods:function(){
-        
+    methods:{
+        like:function(post_id){
+            let self=this;
+            fetch("/api/users/"+post_id+"/like",{
+                method:'POST',
+                headers:{
+                    "Content-Type": "application/json",
+                    'Authorization': 'X-Token ' + localStorage.getItem('token')
+                }
+            }).then(function(response){
+                return response.json();
+            }).then(function (response){
+                    if(response.message == "sucess"){
+                        fetch("/api/posts",{
+                        method:'GET',
+                        headers:{
+                            "Content-Type": "application/json",
+                            'Authorization': 'X-Token ' + localStorage.getItem('token')
+                        }
+                         }).then(function(response){
+                        return response.json();
+                        }).then(function (response){
+                        if(response.message == "All posts"){
+                            self.logined_in = true;
+                            self.posts = response.posts;
+                            self.trigger = false;
+                        }else if(response.message == 'No post'){
+                            self.logined_in = true;
+                            self.trigger = false;
+                        }else{
+                            self.logined_in = false;
+                        }
+                }).catch(function(error){
+                    alert(error);
+                    self.error = error;
+                });
+                }
+            }).catch(function(error){
+                alert(error);
+                self.error = error;
+            });
+    }
     }
 });
 
@@ -450,9 +612,14 @@ const router = new VueRouter({
            component:Explore
        },
         {
-           path:'/post',
+           path:'/post/new',
            component:Post
+       },
+       {
+           path:'/users/:user_id',
+           component:Profile
        }
+        
        
        ]
 });
