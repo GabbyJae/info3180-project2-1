@@ -148,7 +148,7 @@ const Register = Vue.component('register',{
                     self.error = [jsonResponse.message];
                     self.$router.push('/register')
                 }else{
-                    alert(jsonMessaage)
+                    alert(jsonResponse.message)
                     self.reponse = jsonResponse.response;
                     self.$router.push('/explore')
                 }
@@ -162,7 +162,28 @@ const Register = Vue.component('register',{
 
 const Login = Vue.component('login',{
     template: ` 
-        
+        <div>
+        <h2 class="title">Login</h2>
+        <form id="loginform" method="POST" enctype="multipart/form-data" @submit.prevent="login">
+             <table class="logininformation">
+              <tr v-for="mess in error" class="error1">
+                  <h4>{{mess}}</h4>
+              </tr>
+              <tr>
+                  <h4><label for="username">Username</label></h4>
+                  <input id="username" name="username" type="text" value="">
+              </tr>
+              <tr>
+                  <h4><label for="password">Password</label></h4>
+                  <input id="password" name="password" type="password" value="">
+              </tr>
+              <tr>
+                  <br>
+                  <button type="submit" class="color_light_green submit_btn2">Login</button>
+              </tr>
+             </table>
+        </form>
+    </div>
     `,
     data: function() {
         return {
@@ -206,9 +227,6 @@ const Login = Vue.component('login',{
 });
 
 const Logout = Vue.component('logout',{
-    template: ` 
-        
-    `,
     data: function() {
         return {
             reponse:[],
@@ -220,14 +238,13 @@ const Logout = Vue.component('logout',{
             fetch("/api/auth/logout",{
                 method:'POST',
                 header:{
-                    "Content-Type": "application/json",
-                    'Authorization': 'X-Token ' + localStorage.getItem('token')
+                    "Content-Type": "application/json"
                 }
             }).then(function(response){
                 return response.json();
             }).then(function (response){
                     let token = response.token;
-                    
+ 
                     localStorage.setItem('token', token);
                     localStorage.setItem('user_id', null);
                     self.$router.push('/');
@@ -237,6 +254,176 @@ const Logout = Vue.component('logout',{
             });
         }
 });
+
+const Post = Vue.component('post',{
+    template:`
+    <div>
+        <h2 class="title">New Post</h2>
+        <form id="postform" method="POST" enctype="multipart/form-data" @submit.prevent="post">
+             <table class="postinformation">
+                <tr v-for="mess in error" class="error1">
+                  <h4>{{mess}}</h4>
+              </tr>
+              <tr>
+                  <h4><label for="photo">Photo</label></h4>
+                  <input id="photo" name="photo" type="file">
+              </tr>
+              <tr>
+                  <h4><label for="caption">Caption</label></h4>
+                  <textarea id="caption" name="caption" placeholder="Write a caption..."></textarea>
+              </tr>
+              <tr>
+                  <br>
+                  <button type="submit" class="color_light_green submit_btn2">Submit</button>
+              </tr>
+             </table>
+        </form>
+    </div>
+    `,
+    data: function() {
+        return {
+            reponse:[],
+            error:[]
+        }
+    },
+    methods:{
+     post:function(){
+            let self=this;
+            let form = document.getElementById("postform");
+            alert(form)
+            let formData = new FormData(form);
+            let user_id = localStorage.getItem('user_id');
+            fetch("/api/users/"+user_id+"/posts",{
+                method:'POST',
+                body:formData,
+                headers:{
+                    "Content-Type": "application/json",
+                    'Authorization': 'X-Token ' + localStorage.getItem('token')
+                }
+            }).then(function(response){
+                return response.json();
+            }).then(function (response){
+                alert(response.message)
+                if(response.message == "sucess" ){
+                    self.$router.push('/explore')
+                }else{
+                    self.error = [response.message];
+                    self.reponse = response.response;
+                    self.$router.push('/post')
+                }
+            }).catch(function(error){
+                alert(error);
+                self.error = error;
+            });
+        }
+    }
+});
+
+
+const Explore = Vue.component('explore',{
+    template:`
+        <div id="explorepost">
+        <div v-if="logined_in" class="sucess2">
+            <center>
+            <h5>Sucessfully Login</h5>
+            </center>
+        </div>
+        <div v-else class="error2">
+            <center>
+            <h5>You must login first</h5>
+            <router-link class="router_link" to="/login/"><button class="submit_btn color_blue">Login</button></router-link>
+            </center>
+        </div>
+        <div class="rightinfo">
+            <ul class="posts">
+                <li v-for="post in posts">
+                    <div class="post">
+                        <table>
+                            <tr>
+                                <td>
+                                    <img class="post_profile_image" v-bind:src="'./static/img/'+post.profile_pic">
+                                      <h5><router-link  class="router_link color_black" v-bind:to="'/users/' +post.user_id">{{ post.username}}</router-link></h5>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                      <img class="post_image" v-bind:src= "'/static/uploads/'+post.photo_name"/>
+                                        
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <p> {{ post.caption}}</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                <span class="like">
+                                    <img class="like_image" src='./static/img/like.png'/>
+                                    <h5>{{post.no_of_likes}} Likes</h5>
+                                </span>
+                                <span class="date">
+                                    <h5>{{post.created_on}}</h5>
+                                </span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        
+        <div v-if="logined_in" class="leftinfo">
+            <router-link  class="router_link" to="/post"><button class="submit_btn2 color_blue" >New Post</button></router-link>
+        </div>
+    </div>
+    `,
+    watch:{
+      'trigger' (newval,oldval){
+          this.reload();
+      }  
+    },
+    data: function() {
+        return {
+            reponse:[],
+            error:[],
+            posts:[],
+            logined_in:false,
+            trigger:null
+        }
+    },
+    created:function(){
+            let self=this;
+            fetch("/api/posts",{
+                method:'GET',
+                headers:{
+                    "Content-Type": "application/json",
+                    'Authorization': 'X-Token ' + localStorage.getItem('token')
+                }
+            }).then(function(response){
+                return response.json();
+            }).then(function (response){
+                if(response.message == "All post"){
+                    self.logined_in = true;
+                    self.posts = response.posts;
+                    self.trigger = false;
+                }else if(response.message == 'No post'){
+                    self.logined_in = true;
+                    self.trigger = false;
+                }else{
+                    self.no_login = false;
+                    self.trigger = true;
+                }
+            }).catch(function(error){
+                alert(error);
+                self.error = error;
+            });
+        },
+    methods:function(){
+        
+    }
+});
+
 
 Vue.use(VueRouter);
 
@@ -257,6 +444,14 @@ const router = new VueRouter({
         {
            path:'/logout/',
            component:Logout
+       },
+        {
+           path:'/explore',
+           component:Explore
+       },
+        {
+           path:'/post',
+           component:Post
        }
        
        ]

@@ -1,0 +1,53 @@
+{%extends 'base.html'%}
+{% block title %}
+Photogram
+{% endblock %}
+{% block css %}
+
+{%endblock%}
+{%block main%}
+    <div id="explorepost">
+        <div class="rightinfo">
+            <ul class="posts">
+                <li>
+                    <div class="post">
+                        <table>
+                            <tr>
+                                <td>
+                                    <img class="post_profile_image" src='./static/img/camera-icon.png'/>
+                                     <h5>jperalta</h5>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                      <img class="post_image" src='./static/img/HD-Wallpapers1_FOSmVKg.jpeg'/>       
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <p>Its the caption</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                <span class="like">
+                                    <img class="like_image" src='./static/img/like.png'/>
+                                    <h5>10 Likes</h5>
+                                </span>
+                                <span class="date">
+                                    <h5>24 Apr 2016</h5>
+                                </span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="leftinfo">
+            <button class="submit_btn2 color_blue" >New Post</button>
+        </div>
+        
+    </div>
+{%endblock%}

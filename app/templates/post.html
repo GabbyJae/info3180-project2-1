@@ -9,20 +9,20 @@ Photogram
 {%block main%}
     <div id="project2">
         <header-app></header-app>
-        <h2 class="title">Login</h2>
-        <form id=loginform >
-             <table class="logininformation">
+        <h2 class="title">New Post</h2>
+        <form id=postform >
+             <table class="postinformation">
               <tr>
-                  <h4><label for="username">Username</label></h4>
-                  <input id="username" name="username" type="text" value="">
+                  <h4><label for="photo">Photo</label></h4>
+                      <input id="photo" name="photo" type="file">
               </tr>
               <tr>
-                  <h4><label for="password">Password</label></h4>
-                  <input id="password" name="password" type="password" value="">
+                  <h4><label for="caption">Caption</label></h4>
+                  <textarea id="caption" name="caption" placeholder="Write a caption..."></textarea>
               </tr>
               <tr>
                   <br>
-                  <button type="submit" class="color_light_green submit_btn2">Login</button>
+                  <button type="submit" class="color_light_green submit_btn2">Submit</button>
               </tr>
              </table>
         </form>
